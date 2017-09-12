@@ -79,7 +79,10 @@ class Teams
         $tds = [];
         foreach ($teams as $item) {
             $team = new CollectionItem($item['team_id']);
-            $tds[] = $this->getTeamTd($team);
+            $row = new \stdClass();
+            $row->tds = $this->getTeamTd($team);
+            $row->rowAction = Utils::getUrl(['manage', 'collections', $team->getType(), 'edit', $team->id]);
+            array_push($tds, $row);
         }
         return $tds;
     }
@@ -96,12 +99,12 @@ class Teams
             }
         }
         $td = [];
-        $td[] = Utils::tableCell($team->getName());
+        $td[] = Utils::tableCell($team->getName(), false, false, false, Utils::getUrl(['manage', 'collections', $team->getType(), 'edit', $team->id]));
         if ($this->isAdmin) {
             $td[] = Utils::tableCell($team->getCreationDate());
         }
         if ($this->isAdmin) {
-            $td[] = Utils::tableCell($this->actions($team->id), false, false, false, Utils::url(["manage", "collections", $team->getType(), 'edit', $team->id]));
+            $td[] = Utils::tableCell($this->actions($team->id));
         }
         return $td;
     }
@@ -112,17 +115,17 @@ class Teams
 
             'actions' => array(
                 array(
-                    "url" => Utils::getUrl(Utils::getUriComponents(), true, ['deleteTeam' => $id]),
-                    "icon" => "delete",
-                    "name" => i('Remove team from organization', 'forge-teams'),
-                    "ajax" => true,
-                    "confirm" => false
-                ),
-                array(
                     "url" => Utils::getUrl(array("manage", "collections", 'forge-teams', 'edit', $id)),
                     "icon" => "mode_edit",
                     "name" => i('Edit organization', 'forge-teams'),
                     "ajax" => false,
+                    "confirm" => false
+                ),
+                array(
+                    "url" => Utils::getUrl(Utils::getUriComponents(), true, ['deleteTeam' => $id]),
+                    "icon" => "delete",
+                    "name" => i('Remove team from organization', 'forge-teams'),
+                    "ajax" => true,
                     "confirm" => false
                 )
             )
@@ -134,6 +137,7 @@ class Teams
         $db = App::instance()->db;
         $db->where('organization_id', $this->organizationId);
         $db->where('team_id', $team_id);
+        //$db->delete('forge_events_seat_reservations');
     }
 
 }

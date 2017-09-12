@@ -31,6 +31,11 @@ class MyTeams
     {
         $bar = new TableBar(Utils::url(['api', 'forge-teams', 'teams', $this->organizationId]), 'teamsTable');
 
+
+        if (array_key_exists('leaveTeam', $_GET) && is_numeric($_GET['leaveTeam'])) {
+            ForgeTeams::leaveTeam($_GET['leaveTeam']);
+        }
+
         return $bar->render() . App::instance()->render(CORE_TEMPLATE_DIR . "assets/", "table", array(
                 'id' => 'teamsTable',
                 'th' => $this->getThs(),
@@ -77,51 +82,58 @@ class MyTeams
         $teams = $db->get('collections t');
         $tds = [];
         foreach ($teams as $item) {
+            $row = new \stdClass();
             $organization = new CollectionItem($item['organization_id']);
-            $tds[] = $this->getTeamByUserTd($organization, $item);
+            $team = new CollectionItem($item['team_id']);
+            $member = new Member($item['id']);
+            $row->tds = $this->getTeamByUserTd($organization, $team, $member);
+            $row->rowAction = Utils::getUrl(['manage', 'collections', $organization->getType(), 'edit', $organization->id]);
+            array_push($tds, $row);
         }
         return $tds;
     }
 
-    private function getTeamByUserTd($organization, $team)
+    private function getTeamByUserTd($organization, $team, $member)
     {
         $td = [];
-        $td[] = Utils::tableCell($team['name']);
-        $td[] = Utils::tableCell($organization->getName(), false, false, false, Utils::url(["manage", "collections", 'edit', $team['id']])); // TODO
-        $td[] = Utils::tableCell($team['role']);
-        $td[] = Utils::tableCell($team['created']);
-        $td[] = Utils::tableCell($this->actions($team['id']));
+        $td[] = Utils::tableCell($team->getName());
+        $td[] = Utils::tableCell($organization->getName(), false, false, false, Utils::getUrl(['manage', 'collections', $organization->getType(), 'edit', $organization->id]));
+        $td[] = Utils::tableCell($member->getRole());
+        $td[] = Utils::tableCell($team->getCreationDate());
+        $td[] = Utils::tableCell($this->actions($team, $member));
         return $td;
     }
 
 
-    private function actions($id)
+    private function actions($team, $member)
     {
+        $actions = [];
+
+        $leave_team = array(
+            "url" => Utils::getUrl(Utils::getUriComponents(), true, ['leaveTeam' => $team->id]),
+            "icon" => "leave",
+            "name" => i('Leave team', 'forge-teams'),
+            "ajax" => true,
+            "confirm" => true
+        );
+        array_push($actions, $leave_team);
+
+        if ($member->getRole() === Roles::OWNER) {
+            $delete_team = array(
+                "url" => Utils::getUrl(Utils::getUriComponents(), true, ['deleteTeam' => $team->id]),
+                "icon" => "delete",
+                "name" => i('Delete team', 'forge-teams'),
+                "ajax" => true,
+                "confirm" => false
+            );
+            array_push($actions, $delete_team);
+        }
+
         return App::instance()->render(CORE_TEMPLATE_DIR . "assets/", "table.actions", array(
-            'actions' => array(
-                array(
-                    "url" => Utils::getUrl(Utils::getUriComponents(), true, ['leaveTeam' => $id]),
-                    "icon" => "leave",
-                    "name" => i('Leave team', 'forge-teams'),
-                    "ajax" => true,
-                    "confirm" => false
-                ),
-                array(
-                    "url" => Utils::getUrl(Utils::getUriComponents(), true, ['deleteTeam' => $id]),
-                    "icon" => "delete",
-                    "name" => i('Delete team', 'forge-teams'),
-                    "ajax" => true,
-                    "confirm" => false
-                )
+                'actions' => $actions
             )
-        ));
+        );
     }
 
-    public function delete($team_id)
-    {
-        $db = App::instance()->db;
-        $db->where('organization_id', $this->organizationId);
-        $db->where('team_id', $team_id);
-    }
 
 }

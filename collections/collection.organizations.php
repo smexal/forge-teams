@@ -80,7 +80,7 @@ class OrganizationsCollection extends DataCollection
     public function subviewTeamsActions($itemId)
     {
         return $this->app->render(CORE_TEMPLATE_DIR . "assets/", "overlay-button", array(
-            'url' => Utils::getUrl(array('manage', 'collections', 'teams')),
+            'url' => Utils::getUrl(array('manage', 'collections', 'forge-organizations', 'assign', $itemId, 'forge-teams', 'add')),
             'label' => 'add team'
         ));
     }

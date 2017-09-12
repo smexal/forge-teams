@@ -6,6 +6,7 @@ require_once("config.php");
 use Forge\Core\Abstracts\Module;
 use Forge\Core\App\App;
 use Forge\Core\App\Auth;
+use Forge\Core\App\ModifyHandler;
 use Forge\Core\Classes\Settings;
 
 
@@ -23,6 +24,7 @@ class ForgeTeams extends Module
     public function start()
     {
         $this->install();
+        ModifyHandler::instance()->add('modify_manage_navigation', [$this, 'modifyManageNavigation']);
     }
 
     private function install()
@@ -56,6 +58,41 @@ class ForgeTeams extends Module
         App::instance()->db->rawQuery('ALTER TABLE `forge_organizations_teams` MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1');
 
         Settings::set($this->name . ".installed", 1);
+    }
+
+    public function modifyManageNavigation($navigation)
+    {
+        if (Auth::allowed('manage.collection.teams')) {
+            $navigation->removeFromCollections('forge-teams');
+        }
+        if (Auth::allowed('manage.collection.organizations')) {
+            $navigation->removeFromCollections('forge-organizations');
+        }
+        return $navigation;
+    }
+
+    /**
+     * Removed a user from a team
+     * @param $team_id
+     * @param $user_id
+     */
+    public static function leaveTeam($team_id)
+    {
+        $db = App::instance()->db;
+        $db->where('team_id', $team_id);
+        $db->where('user_id', Auth::getSessionUserID());
+        $db->delete('forge_teams_members');
+    }
+
+    /**
+     * Deletes a team
+     * @param $team_id
+     */
+    public function deleteTeam($team_id)
+    {
+        $db = App::instance()->db;
+        $db->where('organization_id', $this->organizationId);
+        $db->where('team_id', $team_id);
     }
 }
 

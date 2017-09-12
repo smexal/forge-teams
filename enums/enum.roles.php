@@ -10,5 +10,10 @@ use Forge\Core\Classes\Enum;
 class Roles extends Enum
 {
 
+    // created the team
     const OWNER = "OWNER";
+    // can manage the team
+    const MANAGER = "MANAGER";
+    // just a player
+    const PLAYER = "PLAYER";
 }

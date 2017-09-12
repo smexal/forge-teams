@@ -73,8 +73,11 @@ class Members
         $members = $db->get('forge_teams_members');
         $tds = [];
         foreach ($members as $member) {
+            $row = new \stdClass();
             $user = new User($member['user_id']);
-            $tds[] = $this->getMemberTd($user, $member);
+            $row->tds = $this->getMemberTd($user, $member);
+            $row->rowAction = Utils::getUrl(['manage', 'users', 'edit', $user->get('id')]);
+            array_push($tds, $row);
         }
         return $tds;
     }
@@ -94,7 +97,7 @@ class Members
             }
         }
         $td = [];
-        $td[] = Utils::tableCell($user->get('username'));
+        $td[] = Utils::tableCell($user->get('username'), false, false, false, Utils::getUrl(['manage', 'users', 'edit', $user->get('id')]));
         if ($this->isAdmin) {
             $td[] = Utils::tableCell($member['role']);
         }
