@@ -17,6 +17,7 @@ class OrganizationsCollection extends DataCollection
         $this->preferences['all-title'] = i('Manage organizations', 'forge-organizations');
         $this->preferences['add-label'] = i('Add organization', 'forge-organizations');
         $this->preferences['single-item'] = i('Organization', 'forge-organizations');
+        $this->preferences['multilang'] = false;
 
         $this->custom_fields();
     }
