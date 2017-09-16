@@ -8,10 +8,13 @@ use Forge\Core\App\App;
 use Forge\Core\App\Auth;
 use Forge\Core\App\ModifyHandler;
 use Forge\Core\Classes\Settings;
+use Forge\Core\Classes\Utils;
 
 
 class ForgeTeams extends Module
 {
+    public $permission = 'manage.teams';
+
     public function setup()
     {
         $this->version = '0.0.1';
@@ -67,6 +70,11 @@ class ForgeTeams extends Module
         }
         if (Auth::allowed('manage.collection.organizations')) {
             $navigation->removeFromCollections('forge-organizations');
+        }
+        if (Auth::allowed($this->permission)) {
+            $navigation->add('esports_container', i('E-Sports'), false, 'leftPanel', 'videogame_asset');
+            $navigation->add('organizations', i('Organizations'), Utils::getUrl(array('manage', 'collections', 'forge-organizations')), 'leftPanel', false, 'esports_container');
+            $navigation->add('teams', i('Teams'), Utils::getUrl(array('manage', 'collections', 'forge-teams')), 'leftPanel', false, 'esports_container');
         }
         return $navigation;
     }
